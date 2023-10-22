@@ -5,6 +5,22 @@ defmodule Exchange.Trade do
 
   alias Exchange.Order
 
+  @type t :: %__MODULE__{
+          trade_id: String.t(),
+          ticker: term(),
+          currency: term(),
+          buyer_id: term(),
+          seller_id: term(),
+          buy_order_id: term(),
+          sell_order_id: term(),
+          price: term(),
+          size: term(),
+          buy_init_size: term(),
+          sell_init_size: term(),
+          type: term(),
+          acknowledged_at: integer()
+        }
+
   defstruct trade_id: UUID.uuid1(),
             ticker: nil,
             currency: nil,
@@ -19,7 +35,7 @@ defmodule Exchange.Trade do
             type: :full_fill,
             acknowledged_at: DateTime.utc_now() |> DateTime.to_unix(:nanosecond)
 
-  @spec decode_from_jason(map) :: %Exchange.Trade{}
+  @spec decode_from_jason(map) :: Exchange.Trade.t()
   @doc """
   Decodes the payload to a Trade struct
   ## Parameters
@@ -56,7 +72,7 @@ defmodule Exchange.Trade do
           matched_order :: Exchange.Order.order(),
           type :: atom,
           currency :: atom
-        ) :: %Exchange.Trade{}
+        ) :: Exchange.Trade.t()
   def generate_trade(
         %Order{side: s1, ticker: t1} = order,
         %Order{side: s2} = matched_order,

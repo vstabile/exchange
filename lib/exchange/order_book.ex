@@ -231,34 +231,31 @@ defmodule Exchange.OrderBook do
         ) ::
           atom() | {atom(), Exchange.Order.order()}
   def fetch_matching_order(order_book, %Order{} = order) do
-    price_points_queue =
+    price_points =
       case order.side do
-        :buy -> Map.get(order_book.sell, order_book.ask_min)
-        :sell -> Map.get(order_book.buy, order_book.bid_max)
+        :buy -> Map.fetch(order_book.sell, order_book.ask_min)
+        :sell -> Map.fetch(order_book.buy, order_book.bid_max)
       end
 
-    if price_points_queue == nil do
-      :empty
+    with {:ok, queue} <- price_points,
+         {:ok, matched_order} <- match_order(queue) do
+      {:ok, matched_order}
     else
-      matched_order =
-        price_points_queue
-        |> Enum.filter(fn order ->
-          if is_integer(order.exp_time) do
-            current_time = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
+      :error -> :empty
+    end
+  end
 
-            if order.exp_time < current_time do
-              false
-            end
-          end
+  defp match_order(queue) do
+    current_time = DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 
-          true
-        end)
-        |> List.first()
+    matched_order =
+      Enum.find(queue, fn %Order{exp_time: exp_time} ->
+        is_nil(exp_time) or exp_time >= current_time
+      end)
 
-      case matched_order do
-        nil -> :empty
-        matched_order -> {:ok, matched_order}
-      end
+    case matched_order do
+      nil -> :error
+      _ -> {:ok, matched_order}
     end
   end
 

@@ -30,9 +30,7 @@ defmodule Exchange.Adapters.Helpers do
 
   defp raise_on_missing_config(key, config, module) do
     Logger.error(
-      "When using #{inspect(module)} are expected #{inspect(key)} to be set, got: #{
-        inspect(config)
-      }"
+      "When using #{inspect(module)} are expected #{inspect(key)} to be set, got: #{inspect(config)}"
     )
 
     raise ArgumentError, "missing configuration"
